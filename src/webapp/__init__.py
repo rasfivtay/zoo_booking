@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template
 
-import webapp.get_hotels 
-import webapp.get_hotel_by_id
+import webapp.handlers.get_hotels as get_hotels
+import webapp.handlers.get_hotel_by_id as get_hotel_by_id
 from webapp.helpers.geo_helper import Point
 
 def create_app():
@@ -16,5 +16,4 @@ def create_app():
     def hotel():
         return get_hotel_by_id.get_hotel_by_id(request.args)
 
-        
-app = create_app()
+    return app
