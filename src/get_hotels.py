@@ -1,15 +1,43 @@
 import typing
 
+from flask import render_template
+
 from helpers.db_helper import db_conn
 from helpers.geo_helper import Point
+
+def get_hotels(args: dict):
+    animal = args.get('animal')
+    point = None
+    try:
+        lat = float(args.get('lat'))
+        lon = float(args.get('lon'))
+        if lat and lon:
+            point = Point(lat=lat, lon=lon)
+    except (ValueError, TypeError):
+        pass
+
+    distance = None
+    try:
+        distance = int(args.get('dist'))
+    except (ValueError, TypeError):
+        pass
+
+    return get_hotels_impl(animal, point, distance)
+
+
+def make_hotel_ref(id):
+    return 'http://127.0.0.1:5000/hotel?id=' + id
 
 def make_db_query(
         animal: typing.Optional[str], 
         point: typing.Optional[Point], 
         distance: typing.Optional[int],
     ) -> dict:
-    result = {'$and': []}
+    if not point and not animal:
+        return {}
 
+    result = {'$and': []}
+    
     if point:
         geo_filter = {
             'location':
@@ -34,42 +62,34 @@ def make_db_query(
 
     return result
 
-def get_hotels(args: dict):
-    animal = args.get('animal')
-    point = None
-    try:
-        lat = float(args.get('lat'))
-        lon = float(args.get('lon'))
-        if lat and lon:
-            point = Point(lat=lat, lon=lon)
-    except (ValueError, TypeError):
-        pass
+def make_response(hotels: typing.List):
 
-    distance = None
-    try:
-        distance = int(args.get('dist'))
-    except (ValueError, TypeError):
-        pass
-
-    return {
-        'hotels': get_hotels_impl(
-            animal, point, distance,
-        )
-    }
+    result = []
+    for hotel in hotels:
+        cur_hotel = {
+            'url': make_hotel_ref(str(hotel['_id'])),
+            'name': hotel['name'],
+            'image': hotel.get('main_image'),
+            'address': hotel.get('address'),
+            'animals': hotel['animals']
+        }
+        result.append(cur_hotel)
+    
+    print('qqqqqqqq')
+    print(result)
+    print(render_template('hotels_list.html', hotels=result))
+    return render_template('hotels_list.html', hotels=result)
 
 def get_hotels_impl(animal: str, point: Point, distance):
     conn = db_conn()
     coll = conn.hotels.hotel
     query = make_db_query(animal, point, distance)
-    response = [hotel for hotel in coll.find(query)]
+    hotels = [hotel for hotel in coll.find(query)]
 
-    for hotel in response:
-        hotel = hotel.pop('_id')
+#    for hotel in hotels:
+#        print(hotel)
 
-#    for hotel in response:
-#        print(hotel['name'])
-
-    return response 
+    return make_response(hotels) 
 
 #print('Check_1')
 #get_hotels_impl('cat', Point(55.746437, 38.014696), 100000)
