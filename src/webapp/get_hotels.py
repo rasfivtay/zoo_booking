@@ -2,8 +2,8 @@ import typing
 
 from flask import render_template
 
-from helpers.db_helper import db_conn
-from helpers.geo_helper import Point
+from webapp.helpers.db_helper import db_conn
+from webapp.helpers.geo_helper import Point
 
 def get_hotels(args: dict):
     animal = args.get('animal')
@@ -74,10 +74,7 @@ def make_response(hotels: typing.List):
             'animals': hotel['animals']
         }
         result.append(cur_hotel)
-    
-    print('qqqqqqqq')
-    print(result)
-    print(render_template('hotels_list.html', hotels=result))
+
     return render_template('hotels_list.html', hotels=result)
 
 def get_hotels_impl(animal: str, point: Point, distance):

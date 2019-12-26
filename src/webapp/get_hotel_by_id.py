@@ -1,6 +1,6 @@
 import bson
 
-from helpers.db_helper import db_conn
+from webapp.helpers.db_helper import db_conn
 
 def get_hotel_by_id(args: dict):
     id = args.get('id')
